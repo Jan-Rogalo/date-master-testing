@@ -1,45 +1,23 @@
 const unitTestingTask = require("../unitTestingTask");
+const setupMockDate = require("../mocks/mockDateSetup");
 
-let originalDate;
-
-beforeAll(() => {
-    originalDate = global.Date;
-});
-
-afterAll(() => {
-    global.Date = originalDate;
-});
+let mockDate;
 
 beforeEach(() => {
-    global.Date = class extends Date {
-        constructor(dateString) {
-            if (dateString) {
-                super(dateString);
-            } else {
-                super("2023-04-23T12:00:00.000Z");
-            }
-        }
-
-        getTimezoneOffset() {
-            return this.timezoneOffset || 0;
-        }
-
-        setTimezoneOffset(offsetMinutes) {
-            this.timezoneOffset = offsetMinutes;
-        }
-    };
+    mockDate = setupMockDate();
 });
 
 afterEach(() => {
-    global.Date = originalDate;
+    mockDate.reset();
 });
 
-
 describe("Date time testing", () => {
-
-    test('Timezone should always be GMT', () => {
-        expect(new Date().getTimezoneOffset()).toBe(0);
+    test("should test something with the mock date", () => {
+        mockDate.set({ offset: 600, isoDate: '2019-07-14T07:50:51.386Z' });
+        const currentDate = new Date();
+        expect(currentDate.getFullYear()).toBe(2019);
     });
+
 
     test("it should throw an error if format argument is missing", () => {
         expect(() => unitTestingTask()).toThrow('Argument `format` must be a string');
@@ -133,10 +111,12 @@ describe("Date time testing", () => {
         "it should convert the date based on token and language for format '%s'",
         ({ format, date, expected }) => {
             unitTestingTask.lang("en");
-            const result = unitTestingTask(format, new Date(date));
+            mockDate.set({ isoDate: date, offset: 0 }); // Adjust the offset as needed
+            const result = unitTestingTask(format, new Date());
             expect(result).toBe(expected);
         }
     );
+
 
     const testCasesPolishLanguage = [
         {
@@ -172,13 +152,14 @@ describe("Date time testing", () => {
     ];
 
     test.each(testCasesPolishLanguage)(
-        "it should convert the date based on token and language for format '%s'",
-        ({ format, date, expected }) => {
-            unitTestingTask.lang("pl");
-            const result = unitTestingTask(format, new Date(date));
-            expect(result).toBe(expected);
-        }
-    );
+            "it should convert the date based on token and language for format '%s'",
+            ({ format, date, expected }) => {
+                unitTestingTask.lang("pl");
+                mockDate.set({ isoDate: date, offset: 0 }); // Adjust the offset as needed
+                const result = unitTestingTask(format, new Date());
+                expect(result).toBe(expected);
+            }
+        );
 
     test("it should handle different meridiem (AM/PM) values", () => {
 
@@ -195,31 +176,29 @@ describe("Date time testing", () => {
     });
 
     const testCasesTimeZoneOffset = [
-        { timeZoneOffset: 0, expectedOffset: "+0000" },
-        { timeZoneOffset: -60, expectedOffset: "-0100" },
-        { timeZoneOffset: 60, expectedOffset: "+0100" },
-        { timeZoneOffset: -120, expectedOffset: "-0200" },
-        { timeZoneOffset: 120, expectedOffset: "+0200" },
-        { timeZoneOffset: -180, expectedOffset: "-0300" },
-        { timeZoneOffset: 180, expectedOffset: "+0300" },
-        { timeZoneOffset: -240, expectedOffset: "-0400" },
-        { timeZoneOffset: 240, expectedOffset: "+0400" },
-        { timeZoneOffset: -330, expectedOffset: "-0530" },
-        { timeZoneOffset: 330, expectedOffset: "+0530" },
-        { timeZoneOffset: -390, expectedOffset: "-0630" },
+        {timeZoneOffset: 0, expectedOffset: "+0000"},
+        {timeZoneOffset: -60, expectedOffset: "-0100"},
+        {timeZoneOffset: 60, expectedOffset: "+0100"},
+        {timeZoneOffset: -120, expectedOffset: "-0200"},
+        {timeZoneOffset: 120, expectedOffset: "+0200"},
+        {timeZoneOffset: -180, expectedOffset: "-0300"},
+        {timeZoneOffset: 180, expectedOffset: "+0300"},
+        {timeZoneOffset: -240, expectedOffset: "-0400"},
+        {timeZoneOffset: 240, expectedOffset: "+0400"},
+        {timeZoneOffset: -330, expectedOffset: "-0530"},
+        {timeZoneOffset: 330, expectedOffset: "+0530"},
+        {timeZoneOffset: -390, expectedOffset: "-0630"},
     ];
 
     test.each(testCasesTimeZoneOffset)(
-        "it should convert the date based on the time zone offset",
-        ({ timeZoneOffset, expectedOffset }) => {
-            const mockDate = new Date("2023-04-23T17:48:30.000Z");
-            mockDate.setTimezoneOffset(timeZoneOffset);
-            const formattedDate = unitTestingTask('d-M-YY HH:mm:ss ZZ', mockDate);
+        "it should convert the date based on token and time zone offset",
+        ({timeZoneOffset, expectedOffset}) => {
+            mockDate.set({offset: timeZoneOffset, isoDate: '2023-04-23T17:48:30.000Z'});
+
+            const formattedDate = unitTestingTask('d-M-YY HH:mm:ss ZZ', new Date());
+
             expect(formattedDate).toBe(`23-4-23 17:48:30 ${expectedOffset}`);
         }
     );
+
 });
-
-
-
-
