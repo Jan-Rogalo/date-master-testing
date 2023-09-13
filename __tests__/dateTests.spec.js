@@ -191,8 +191,8 @@ test("it should handle different meridiem (AM/PM) values", () => {
             const adjustedDate = new Date(new Date(isoDate).getTime() + offsetMilliseconds);
 
             const sign = timeZoneOffset >= 0 ? '+' : '-';
-            const hours = Math.abs(Math.floor(timeZoneOffset / 60)).toString().padStart(2, '0'); // Ensure two digits
-            const minutes = Math.abs(timeZoneOffset % 60).toString().padStart(2, '0'); // Ensure two digits
+            const hours = Math.abs(Math.floor(timeZoneOffset / 60)).toString().padStart(2, '0');
+            const minutes = Math.abs(timeZoneOffset % 60).toString().padStart(2, '0');
             const formattedOffset = `${sign}${hours}${minutes}`;
 
             const formattedDate = unitTestingTask('d-M-YY HH:mm:ss ZZ', adjustedDate);
